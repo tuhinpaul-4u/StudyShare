@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study Materials | StudyShare</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .card {
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">StudyShare</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <% if(user) { %>
+            <li class="nav-item"><a class="nav-link" href="/materials/new">Add Material</a></li>
+            <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+          <% } else { %>
+            <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+            <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container my-5">
+    <h1 class="mb-4 text-center">Study Materials</h1>
+
+    <% if(materials.length === 0) { %>
+      <p class="text-center text-muted">No materials available yet.</p>
+    <% } else { %>
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <% materials.forEach(material => { %>
+          <div class="col">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title"><%= material.title %></h5>
+                <p class="card-text"><%= material.description %></p>
+              </div>
+              <div class="card-footer d-flex justify-content-between align-items-center">
+                <small class="text-muted">By <%= material.author.username %></small>
+                <div>
+                  <% if(material.author._id.toString() === user._id.toString()) { %>
+                    <a href="/materials/<%= material._id %>/edit" class="btn btn-sm btn-warning">Edit</a>
+                    <form action="/materials/<%= material._id %>?_method=DELETE" method="POST" style="display:inline">
+                      <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                  <% } %>
+                  <% if(material.fileUrl){ %>
+                    <a href="<%= material.fileUrl %>" class="btn btn-sm btn-primary" target="_blank">Download</a>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-3 mt-5">
+    <div class="container text-center">
+      &copy; <%= new Date().getFullYear() %> StudyShare. All rights reserved.
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
