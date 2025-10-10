@@ -3,19 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard | StudyTogether</title>
+  <title>Dashboard | StudyShare</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background-color: #f8f9fa; }
-    .card { margin-bottom: 20px; }
+    .card { margin-bottom: 20px; transition: transform 0.2s, box-shadow 0.2s; }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
     .friend-material { border-left: 4px solid #0d6efd; }
+    .alert-custom { margin-bottom: 20px; }
+    .fade-in-card { opacity: 0; transform: translateY(20px); animation: fadeInUp 0.5s forwards; }
+    @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="/dashboard">StudyTogether</a>
+      <a class="navbar-brand" href="/dashboard">StudyShare</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -32,21 +36,33 @@
   <div class="container my-5">
     <h1 class="mb-4 text-center">Dashboard</h1>
 
+    <!-- Friend Messages / Errors -->
+    <% if(typeof friendMessage !== 'undefined' && friendMessage) { %>
+      <div class="alert alert-success alert-custom text-center"><%= friendMessage %></div>
+    <% } %>
+    <% if(typeof friendError !== 'undefined' && friendError) { %>
+      <div class="alert alert-danger alert-custom text-center"><%= friendError %></div>
+    <% } %>
+
     <!-- Friends' Materials -->
     <h3 class="mb-3">Friends' Materials</h3>
-    <% if(friendsMaterials.length === 0) { %>
+    <% if(!friendsMaterials || friendsMaterials.length === 0) { %>
       <p class="text-muted">No materials from friends yet.</p>
     <% } else { %>
       <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
-        <% friendsMaterials.forEach(mat => { %>
+        <% friendsMaterials.forEach((mat, index) => { %>
           <div class="col">
-            <div class="card h-100 shadow-sm friend-material">
+            <div class="card h-100 shadow-sm friend-material fade-in-card" style="animation-delay:<%= index*0.1 %>s">
               <div class="card-body">
                 <h5 class="card-title"><%= mat.title %></h5>
                 <p class="card-text"><%= mat.description %></p>
-                <p class="text-muted">By: <%= mat.author.username %></p>
                 <% if(mat.fileUrl) { %>
                   <a href="<%= mat.fileUrl %>" target="_blank" class="btn btn-primary btn-sm">View File</a>
+                <% } else { %>
+                  <span class="text-muted">No file uploaded</span>
+                <% } %>
+                <% if(mat.author && mat.author.username) { %>
+                  <p class="text-muted mt-2">By: <%= mat.author.username %></p>
                 <% } %>
               </div>
             </div>
@@ -57,18 +73,20 @@
 
     <!-- Your Materials -->
     <h3 class="mb-3">Your Materials</h3>
-    <% if(yourMaterials.length === 0) { %>
+    <% if(!yourMaterials || yourMaterials.length === 0) { %>
       <p class="text-muted">You haven't uploaded any materials yet.</p>
     <% } else { %>
       <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        <% yourMaterials.forEach(mat => { %>
+        <% yourMaterials.forEach((mat, index) => { %>
           <div class="col">
-            <div class="card h-100 shadow-sm">
+            <div class="card h-100 shadow-sm fade-in-card" style="animation-delay:<%= index*0.1 %>s">
               <div class="card-body">
                 <h5 class="card-title"><%= mat.title %></h5>
                 <p class="card-text"><%= mat.description %></p>
                 <% if(mat.fileUrl) { %>
                   <a href="<%= mat.fileUrl %>" target="_blank" class="btn btn-primary btn-sm">View File</a>
+                <% } else { %>
+                  <span class="text-muted">No file uploaded</span>
                 <% } %>
               </div>
               <div class="card-footer d-flex justify-content-between">
@@ -86,7 +104,7 @@
 
   <footer class="bg-dark text-white py-3 mt-5">
     <div class="container text-center">
-      &copy; <%= new Date().getFullYear() %> StudyTogether. All rights reserved.
+      &copy; <%= new Date().getFullYear() %> StudyShare. All rights reserved.
     </div>
   </footer>
 

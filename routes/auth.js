@@ -4,12 +4,13 @@ import User from "../models/User.js";
 
 const router = express.Router();
 
-// Register page
+/* -------------------------------
+   REGISTER
+--------------------------------- */
 router.get("/register", (req, res) => {
   res.render("register", { error: null, message: null });
 });
 
-// Handle registration
 router.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -19,7 +20,6 @@ router.post("/register", async (req, res) => {
       return res.render("register", { error: "Email already in use", message: null });
     }
 
-    // ✅ If this is the admin email (from .env), skip verification
     if (email === process.env.ADMIN_EMAIL) {
       const adminUser = new User({
         username,
@@ -34,7 +34,6 @@ router.post("/register", async (req, res) => {
       return res.redirect("/");
     }
 
-    // 🔒 For normal users: generate verification token
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const newUser = new User({
       username,
@@ -44,18 +43,15 @@ router.post("/register", async (req, res) => {
     });
     await newUser.save();
 
-    // Generate Gmail compose link
     const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
       email
-    )}&su=${encodeURIComponent(
-      "StudyShare Verification"
-    )}&body=${encodeURIComponent(
+    )}&su=${encodeURIComponent("StudyTogether Verification")}&body=${encodeURIComponent(
       `Hello ${username},\n\nClick the link below to verify your account:\nhttp://localhost:3000/verify/${verificationToken}`
     )}`;
 
     res.render("register", {
       error: null,
-      message: `Please verify your email before logging in. Click <a href="${gmailLink}" target="_blank">here</a> to open Gmail and send yourself the verification link.`
+      message: `Please verify your email before logging in. Click <a href="${gmailLink}" target="_blank">here</a> to open Gmail and send yourself the verification link.`,
     });
   } catch (err) {
     console.error(err);
@@ -63,7 +59,9 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Email verification
+/* -------------------------------
+   VERIFY EMAIL
+--------------------------------- */
 router.get("/verify/:token", async (req, res) => {
   try {
     const user = await User.findOne({ verificationToken: req.params.token });
@@ -80,12 +78,13 @@ router.get("/verify/:token", async (req, res) => {
   }
 });
 
-// Login form
+/* -------------------------------
+   LOGIN
+--------------------------------- */
 router.get("/login", (req, res) => {
   res.render("login", { error: null });
 });
 
-// Login submission
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -105,17 +104,34 @@ router.post("/login", async (req, res) => {
     }
 
     req.session.user = user;
-    res.redirect("/");
+    res.redirect("/dashboard");
   } catch (err) {
     console.error(err);
     res.render("login", { error: "Something went wrong. Please try again." });
   }
 });
 
-// Logout route
+/* -------------------------------
+   LOGOUT
+--------------------------------- */
 router.get("/logout", (req, res) => {
   req.session.destroy(() => {
     res.redirect("/login");
+  });
+});
+
+/* -------------------------------
+   FORGOT PASSWORD (placeholder)
+--------------------------------- */
+router.get("/forgot-password", (req, res) => {
+  res.render("forgot-password", {
+    message: "🔧 Password reset feature is under development. Stay tuned for future updates!",
+  });
+});
+
+router.post("/forgot-password", (req, res) => {
+  res.render("forgot-password", {
+    message: "🔧 Password reset feature is under development. Stay tuned for future updates!",
   });
 });
 

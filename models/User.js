@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
   verificationToken: String,
   isAdmin: { type: Boolean, default: false },
 
-  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
+  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 });
 
 // Hash password before saving
@@ -25,5 +25,3 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
 
 const User = mongoose.model("User", userSchema);
 export default User;
-
-

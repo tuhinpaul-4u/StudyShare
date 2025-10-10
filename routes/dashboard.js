@@ -5,7 +5,7 @@ import Material from "../models/Material.js";
 
 const router = express.Router();
 
-// Helper function to fetch dashboard data
+// Helper: fetch dashboard data
 async function getDashboardData(userId) {
   const user = await User.findById(userId).populate("friends");
 
@@ -18,16 +18,21 @@ async function getDashboardData(userId) {
 }
 
 // Dashboard route
-router.get("/dashboard", isAuthenticated, async (req, res) => {
+router.get("/", isAuthenticated, async (req, res) => {
   try {
     const { user, yourMaterials, friendsMaterials } = await getDashboardData(req.session.user._id);
+
+    const friendMessage = req.session.friendMessage || null;
+    const friendError = req.session.friendError || null;
+    req.session.friendMessage = null;
+    req.session.friendError = null;
 
     res.render("dashboard", {
       user,
       yourMaterials,
       friendsMaterials,
-      friendError: null,
-      friendMessage: null
+      friendMessage,
+      friendError
     });
   } catch (err) {
     console.error(err);
@@ -35,36 +40,22 @@ router.get("/dashboard", isAuthenticated, async (req, res) => {
       user: req.session.user,
       yourMaterials: [],
       friendsMaterials: [],
-      friendError: "Failed to load dashboard",
-      friendMessage: null
+      friendMessage: null,
+      friendError: "Failed to load dashboard"
     });
   }
 });
 
-// Friends page
-router.get("/friends", isAuthenticated, async (req, res) => {
-  try {
-    const user = await User.findById(req.session.user._id).populate("friends");
-    res.render("friends", {
-      user,
-      friendError: null,
-      friendMessage: null
-    });
-  } catch (err) {
-    console.error(err);
-    res.render("friends", {
-      user: req.session.user,
-      friendError: "Failed to load friends",
-      friendMessage: null
-    });
-  }
-});
 
+
+// Friends page (optional, can redirect to dashboard instead)
+router.get("/friends", isAuthenticated, (req, res) => {
+  res.redirect("/dashboard");
+});
 
 // Add Friend
 router.post("/friends/add", isAuthenticated, async (req, res) => {
   const { email } = req.body;
-
   try {
     const user = await User.findById(req.session.user._id).populate("friends");
     const friendToAdd = await User.findOne({ email });
