@@ -26,6 +26,6 @@
     "dev": "nodemon server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Tuhin Paul",
   "license": "ISC"
 }
