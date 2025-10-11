@@ -1,14 +1,11 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 
-dotenv.config(); // ✅ ensures .env is loaded even if called from server.js early
+dotenv.config(); // Ensure environment variables are loaded
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const conn = await mongoose.connect(process.env.MONGO_URI); // ✅ simplified
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error("❌ MongoDB connection error:", error.message);
