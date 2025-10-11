@@ -1,6 +1,7 @@
 import express from "express";
 import crypto from "crypto";
 import User from "../models/User.js";
+import sendEmail from "../utils/email.js"; // ✅ import your email sender
 
 const router = express.Router();
 
@@ -20,6 +21,7 @@ router.post("/register", async (req, res) => {
       return res.render("register", { error: "Email already in use", message: null });
     }
 
+    // ✅ Admin auto-verified
     if (email === process.env.ADMIN_EMAIL) {
       const adminUser = new User({
         username,
@@ -28,30 +30,35 @@ router.post("/register", async (req, res) => {
         isVerified: true,
         isAdmin: true,
       });
-
       await adminUser.save();
       req.session.user = adminUser;
-      return res.redirect("/");
+      return res.redirect("/dashboard");
     }
 
+    // ✅ Create verification token and user
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const newUser = new User({
       username,
       email,
       password,
       verificationToken,
+      isVerified: false,
     });
     await newUser.save();
 
-    const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
-      email
-    )}&su=${encodeURIComponent("StudyTogether Verification")}&body=${encodeURIComponent(
-      `Hello ${username},\n\nClick the link below to verify your account:\nhttp://localhost:3000/verify/${verificationToken}`
-    )}`;
+    // ✅ Send email using your email.js utility
+    
+    const verifyLink = `${process.env.BASE_URL}/verify/${verificationToken}`;
+    await sendEmail(email, "Verify your StudyShare account",
+    `<p>Hi ${username},</p>
+    <p>Click to verify: <a href="${verifyLink}">${verifyLink}</a></p>`
+    );
 
+
+    // ✅ Inform the user to check their email
     res.render("register", {
       error: null,
-      message: `Please verify your email before logging in. Click <a href="${gmailLink}" target="_blank">here</a> to open Gmail and send yourself the verification link.`,
+      message: `Verification email sent to <b>${email}</b>. Please check your inbox (and spam folder).`,
     });
   } catch (err) {
     console.error(err);
@@ -65,16 +72,18 @@ router.post("/register", async (req, res) => {
 router.get("/verify/:token", async (req, res) => {
   try {
     const user = await User.findOne({ verificationToken: req.params.token });
-    if (!user) return res.send("Invalid or expired verification link.");
+    if (!user) {
+      return res.render("login", { error: "Invalid or expired verification link." });
+    }
 
     user.isVerified = true;
     user.verificationToken = undefined;
     await user.save();
 
-    res.send("✅ Email verified successfully! You can now log in.");
+    res.render("login", { error: null, message: "✅ Email verified successfully! You can now log in." });
   } catch (err) {
     console.error(err);
-    res.send("Error verifying email.");
+    res.render("login", { error: "Error verifying email. Please try again later.", message: null });
   }
 });
 
@@ -82,7 +91,7 @@ router.get("/verify/:token", async (req, res) => {
    LOGIN
 --------------------------------- */
 router.get("/login", (req, res) => {
-  res.render("login", { error: null });
+  res.render("login", { error: null, message: null });
 });
 
 router.post("/login", async (req, res) => {
@@ -91,23 +100,23 @@ router.post("/login", async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.render("login", { error: "No account found with that email." });
+      return res.render("login", { error: "No account found with that email.", message: null });
     }
 
     if (!user.isVerified && !user.isAdmin) {
-      return res.render("login", { error: "Please verify your email before logging in." });
+      return res.render("login", { error: "Please verify your email before logging in.", message: null });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.render("login", { error: "Incorrect password." });
+      return res.render("login", { error: "Incorrect password.", message: null });
     }
 
     req.session.user = user;
     res.redirect("/dashboard");
   } catch (err) {
     console.error(err);
-    res.render("login", { error: "Something went wrong. Please try again." });
+    res.render("login", { error: "Something went wrong. Please try again.", message: null });
   }
 });
 
