@@ -1,7 +1,7 @@
 import express from "express";
 import crypto from "crypto";
 import User from "../models/User.js";
-import sendEmail from "../utils/email.js"; // ✅ import your email sender
+import sendEmail from "../utils/sendEmail.js";
 
 const router = express.Router();
 
