@@ -28,29 +28,37 @@ router.get("/", isAuthenticated, async (req, res) => {
 
 // Form to add new material
 router.get("/new", isAuthenticated, (req, res) => {
-  res.render("materials/new", { error: null });
+  res.render("materials/new", { 
+    material: {}, 
+    editMode: false, 
+    error: null 
+  });
 });
+
 
 // Upload new material
 router.post("/", isAuthenticated, upload.single("file"), async (req, res) => {
   try {
-    const { title, description } = req.body;
-    const fileUrl = req.file ? req.file.path : null;
-
-    await Material.create({
-      title,
-      description,
-      fileUrl,
+    const newMaterial = new Material({
+      title: req.body.title,
+      description: req.body.description,
+      fileUrl: "/uploads/" + req.file.filename,
       author: req.session.user._id,
     });
 
-    req.session.materialMessage = "Material uploaded successfully!"; // ✅ add flash
+    await newMaterial.save();
+    req.session.materialMessage = "✅ Material added successfully!";
     res.redirect("/dashboard");
   } catch (err) {
-    console.error(err);
-    res.render("materials/new", { error: "Error uploading material" });
+    console.error("Error uploading material:", err);
+    res.render("materials/new", { 
+      material: req.body, 
+      editMode: false, 
+      error: "Error adding material. Please try again." 
+    });
   }
 });
+
 
 // Edit material page — reuse upload form
 router.get("/:id/edit", isAuthenticated, async (req, res) => {
