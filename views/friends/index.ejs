@@ -6,14 +6,26 @@
   <title>Friends | StudyShare</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    /* Ensure card content wraps nicely and username truncates */
-    .card-body {
-      padding: 0.75rem 1rem;
+    /* Friends row scrollable on very small screens */
+    .friends-row {
+      display: flex;
+      flex-wrap: wrap; /* wrap on larger screens */
+      gap: 1rem; /* spacing between cards */
+      overflow-x: auto; /* scroll on small screens */
+      padding-bottom: 0.5rem;
     }
 
+    /* Card width responsive */
+    .friends-row .col {
+      flex: 1 1 250px; /* grow, shrink, base width */
+      min-width: 250px; /* minimum width to prevent button overflow */
+      max-width: 100%; /* don't exceed container width */
+    }
+
+    /* Username truncation inside flex */
     .card-body .username {
       flex-grow: 1;
-      min-width: 0; /* Needed for text-truncate to work inside flex */
+      min-width: 0;
     }
 
     .card-body .username span {
@@ -26,13 +38,18 @@
     /* Hide buttons on very small screens and center username */
     @media (max-width: 436px) {
       .friend-action-btn {
-        display: none !important; /* Hide the button/form */
+        display: none !important;
       }
 
       .card-body {
-        justify-content: center !important; /* Center the username */
+        justify-content: center !important;
         text-align: center;
       }
+    }
+
+    /* Optional: nicer card padding */
+    .card-body {
+      padding: 0.75rem 1rem;
     }
   </style>
 </head>
@@ -57,7 +74,7 @@
   <div class="container my-5">
     <h1 class="mb-4 text-center">Manage Friends</h1>
     
-    <div class="row row-cols-1 row-cols-md-2 g-4">
+    <div class="friends-row">
       <% users.forEach(u => { %>
         <div class="col">
           <div class="card shadow-sm">
