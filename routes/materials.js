@@ -42,19 +42,18 @@ router.post("/", isAuthenticated, upload.single("file"), async (req, res) => {
     const newMaterial = new Material({
       title: req.body.title,
       description: req.body.description,
-      fileUrl: "/uploads/" + req.file.filename,
       author: req.session.user._id,
+      fileUrl: req.file ? req.file.path : null,
     });
 
     await newMaterial.save();
-    req.session.materialMessage = "✅ Material added successfully!";
     res.redirect("/dashboard");
   } catch (err) {
-    console.error("Error uploading material:", err);
+    console.error("Error adding material:", err);
     res.render("materials/new", { 
       material: req.body, 
       editMode: false, 
-      error: "Error adding material. Please try again." 
+      error: "Error uploading material. Please try again." 
     });
   }
 });
@@ -97,7 +96,7 @@ router.put("/:id", isAuthenticated, upload.single("file"), async (req, res) => {
 
     // Only replace file if user uploaded a new one
     if (req.file) {
-      material.fileUrl = "/uploads/" + req.file.filename;
+      material.fileUrl = req.file.path;
     }
 
     await material.save();
