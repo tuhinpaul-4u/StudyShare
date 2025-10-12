@@ -64,15 +64,17 @@ router.post("/", isAuthenticated, upload.single("file"), async (req, res) => {
 router.get("/:id/edit", isAuthenticated, async (req, res) => {
   try {
     const material = await Material.findById(req.params.id);
-
     if (!material) return res.redirect("/dashboard");
-    if (!material.author.equals(req.session.user._id)) return res.send("Unauthorized");
 
-    // Render the same "materials/new" form but in edit mode
-    res.render("materials/new", {
-      material,
-      editMode: true,
-      error: null
+    // Only allow owner to edit
+    if (!material.author.equals(req.session.user._id)) {
+      return res.send("Unauthorized");
+    }
+
+    res.render("materials/new", { 
+      material, 
+      editMode: true, 
+      error: null 
     });
   } catch (err) {
     console.error("Error loading edit page:", err);
