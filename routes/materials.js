@@ -52,26 +52,59 @@ router.post("/", isAuthenticated, upload.single("file"), async (req, res) => {
   }
 });
 
+// Edit material page — reuse upload form
+router.get("/:id/edit", isAuthenticated, async (req, res) => {
+  try {
+    const material = await Material.findById(req.params.id);
+
+    if (!material) return res.redirect("/dashboard");
+    if (!material.author.equals(req.session.user._id)) return res.send("Unauthorized");
+
+    // Render the same "materials/new" form but in edit mode
+    res.render("materials/new", {
+      material,
+      editMode: true,
+      error: null
+    });
+  } catch (err) {
+    console.error("Error loading edit page:", err);
+    res.redirect("/dashboard");
+  }
+});
+
+
 // Update material
 router.put("/:id", isAuthenticated, upload.single("file"), async (req, res) => {
   try {
     const material = await Material.findById(req.params.id);
-    if (!material) return res.redirect("/materials");
+
+    if (!material) return res.redirect("/dashboard");
     if (!material.author.equals(req.session.user._id)) return res.send("Unauthorized");
 
+    // Update title and description
     material.title = req.body.title;
     material.description = req.body.description;
-    if (req.file) material.fileUrl = req.file.path;
+
+    // Only replace file if user uploaded a new one
+    if (req.file) {
+      material.fileUrl = "/uploads/" + req.file.filename;
+    }
 
     await material.save();
 
-    req.session.materialMessage = "Material updated successfully!"; // ✅ add flash
+    // Optional success message
+    req.session.materialMessage = "✅ Material updated successfully!";
     res.redirect("/dashboard");
   } catch (err) {
-    console.error(err);
-    res.render("materials/edit", { material, error: "Error updating material" });
+    console.error("Error updating material:", err);
+    res.render("materials/new", { 
+      material: req.body, 
+      editMode: true, 
+      error: "Error updating material. Please try again." 
+    });
   }
 });
+
 
 // Delete material
 router.delete("/:id", isAuthenticated, async (req, res) => {

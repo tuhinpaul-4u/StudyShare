@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Add Material | StudyShare</title>
+  <title><%= editMode ? "Edit Material" : "Add Material" %> | StudyShare</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
@@ -19,7 +19,7 @@
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="/">StudyShare</a>
+      <a class="navbar-brand" href="/dashboard">StudyShare</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -35,28 +35,70 @@
   <!-- Form Card -->
   <div class="container my-5">
     <div class="card shadow-sm p-4">
-      <h2 class="mb-4 text-center">Add New Study Material</h2>
+      <h2 class="mb-4 text-center">
+        <%= editMode ? "Edit Study Material" : "Add New Study Material" %>
+      </h2>
 
       <% if (error) { %>
         <div class="alert alert-danger"><%= error %></div>
       <% } %>
 
-      <form action="/materials" method="POST" enctype="multipart/form-data">
+      <form 
+        action="<%= editMode ? '/materials/' + material._id + '?_method=PUT' : '/materials' %>"
+        method="POST" 
+        enctype="multipart/form-data"
+      >
         <div class="mb-3">
           <label for="title" class="form-label">Title</label>
-          <input type="text" class="form-control" id="title" name="title" placeholder="Enter title" required>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="title" 
+            name="title" 
+            placeholder="Enter title"
+            value="<%= material ? material.title : '' %>"
+            required
+          >
         </div>
+
         <div class="mb-3">
           <label for="description" class="form-label">Description</label>
-          <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter description"></textarea>
+          <textarea 
+            class="form-control" 
+            id="description" 
+            name="description" 
+            rows="3"
+            placeholder="Enter description"
+          ><%= material ? material.description : '' %></textarea>
         </div>
+
         <div class="mb-3">
           <label for="file" class="form-label">Upload File (PDF, Word, Image)</label>
-          <input class="form-control" type="file" id="file" name="file">
+
+          <% if (editMode && material && material.fileUrl) { %>
+            <p class="small">
+              📄 Current File: 
+              <a href="<%= material.fileUrl %>" target="_blank">View Existing File</a>
+            </p>
+          <% } %>
+
+          <input 
+            class="form-control" 
+            type="file" 
+            id="file" 
+            name="file"
+            <%= editMode ? "" : "required" %>
+          >
+          <% if (editMode) { %>
+            <small class="text-muted">Leave empty to keep existing file.</small>
+          <% } %>
         </div>
+
         <div class="d-flex justify-content-between">
-          <button type="submit" class="btn btn-primary">Add Material</button>
-          <a href="/materials" class="btn btn-secondary">Cancel</a>
+          <a href="/dashboard" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary">
+            <%= editMode ? "Update Material" : "Add Material" %>
+          </button>
         </div>
       </form>
     </div>
