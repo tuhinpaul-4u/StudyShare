@@ -6,7 +6,8 @@
   <title>Friends | StudyShare</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background-color: #f8f9fa; }
+    body { background-color: #ADB5BD; }
+    .card-col{background-color: #E9ECEF;}
     .card { margin-bottom: 20px; }
   </style>
 </head>
@@ -32,8 +33,8 @@
     <h1 class="mb-4 text-center">Your Friends</h1>
 
     <!-- Add Friend Form -->
-    <div class="card p-4 mb-5 shadow-sm">
-      <h3 class="mb-3">Add a Friend</h3>
+    <div class="card p-4 mb-5 shadow-sm card-col">
+      <h3 class="mb-3">ADD FRIENDS!</h3>
       <% if(friendError) { %>
         <div class="alert alert-danger"><%= friendError %></div>
       <% } %>
@@ -42,13 +43,13 @@
       <% } %>
       <form action="/friends/add" method="POST" class="d-flex gap-2">
         <input type="email" name="email" class="form-control" placeholder="Friend's email" required>
-        <button type="submit" class="btn btn-primary">Add</button>
+        <button type="submit" class="btn btn-dark">Add</button>
       </form>
     </div>
 
     <!-- Friends List -->
-    <div class="card p-4 shadow-sm">
-      <h3 class="mb-3">Friends List</h3>
+    <div class="card p-4 shadow-sm card-col">
+      <h3 class="mb-3">FRIENDS LIST</h3>
       <% if(user.friends.length === 0) { %>
         <p class="text-muted">You have no friends yet.</p>
       <% } else { %>
