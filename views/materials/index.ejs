@@ -6,15 +6,92 @@
   <title>Study Materials | StudyShare</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background-color: #ADB5BD; }
-    .card { margin-bottom: 20px; transition: transform 0.2s, box-shadow 0.2s; }
-    .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
-    .fade-in-card { opacity: 0; transform: translateY(20px); animation: fadeInUp 0.5s forwards; }
-    @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+    body, html {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background-color: #1E1E2F;
+      overflow-x: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #constellationCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background: linear-gradient(to bottom, #1E1E2F, #111121);
+    }
+
+    .card {
+      border-radius: 12px;
+      overflow: hidden;
+      background-color: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+    }
+
+    .card-body h5, .card-body p, .card-body span, .card-body a, .card-body p.text-muted {
+      color: #fff;
+    }
+
+    .btn-view {
+      background-color: #FFCA28;
+      color: #1E1E2F;
+      font-weight: bold;
+    }
+
+    .btn-view:hover {
+      background-color: #ffc107cc;
+      color: #1E1E2F;
+    }
+
+    .fade-in-card {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.5s forwards;
+    }
+
+    @keyframes fadeInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    footer {
+      background-color: #343A40;
+      color: #fff;
+      padding: 15px 0;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      margin-top: 50px;
+    }
+
+    h1 {
+      color: #fff;
+    }
+
+    .alert-success {
+      background-color: rgba(40,167,69,0.2);
+      border-color: rgba(40,167,69,0.3);
+      color: #fff;
+    }
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <!-- Constellation Background -->
+  <canvas id="constellationCanvas"></canvas>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="position: relative; z-index: 1;">
     <div class="container">
       <a class="navbar-brand" href="/dashboard">StudyShare</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -30,10 +107,9 @@
     </div>
   </nav>
 
-  <div class="container my-5">
+  <div class="container my-5" style="position: relative; z-index:1;">
     <h1 class="mb-4 text-center">Study Materials</h1>
 
-    <!-- Optional success message -->
     <% if(typeof materialMessage !== 'undefined' && materialMessage) { %>
       <div class="alert alert-success text-center mb-3"><%= materialMessage %></div>
     <% } %>
@@ -49,7 +125,7 @@
                 <h5 class="card-title"><%= mat.title %></h5>
                 <p class="card-text"><%= mat.description %></p>
                 <% if(mat.fileUrl) { %>
-                  <a href="<%= mat.fileUrl %>" target="_blank" class="btn btn-dark btn-sm">View File</a>
+                  <a href="<%= mat.fileUrl %>" target="_blank" class="btn btn-view btn-sm">View File</a>
                 <% } else { %>
                   <span class="text-muted">No file uploaded</span>
                 <% } %>
@@ -64,12 +140,81 @@
     <% } %>
   </div>
 
-  <footer class="bg-dark text-white py-3 mt-5">
-    <div class="container text-center">
-      &copy; <%= new Date().getFullYear() %> StudyShare. All rights reserved.
-    </div>
+  <footer>
+    &copy; <%= new Date().getFullYear() %> StudyShare. All rights reserved.
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Constellation background
+    const canvas = document.getElementById('constellationCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, particles;
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+
+    function createParticles() {
+      particles = [];
+      const total = 60;
+      for(let i=0;i<total;i++){
+        particles.push({
+          x: Math.random()*width,
+          y: Math.random()*height,
+          vx: (Math.random()-0.5)*0.3,
+          vy: (Math.random()-0.5)*0.3,
+          radius: Math.random()*2+1
+        });
+      }
+    }
+
+    function drawParticles(){
+      ctx.clearRect(0,0,width,height);
+      for(let p of particles){
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.radius,0,Math.PI*2);
+        ctx.fillStyle="#FFCA28";
+        ctx.fill();
+      }
+
+      for(let i=0;i<particles.length;i++){
+        for(let j=i+1;j<particles.length;j++){
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if(dist<120){
+            ctx.strokeStyle = "rgba(255,202,40," + (1-dist/120)*0.3 + ")";
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      updateParticles();
+      requestAnimationFrame(drawParticles);
+    }
+
+    function updateParticles(){
+      for(let p of particles){
+        p.x += p.vx;
+        p.y += p.vy;
+        if(p.x<0 || p.x>width) p.vx*=-1;
+        if(p.y<0 || p.y>height) p.vy*=-1;
+      }
+    }
+
+    window.addEventListener('resize', ()=>{
+      resizeCanvas();
+      createParticles();
+    });
+
+    resizeCanvas();
+    createParticles();
+    drawParticles();
+  </script>
 </body>
 </html>

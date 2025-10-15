@@ -6,27 +6,123 @@
   <title><%= editMode ? "Edit Material" : "Upload New Material" %> | StudyShare</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background-color: #ADB5BD; }
-    .container { max-width: 600px; margin-top: 60px; }
-    .card { border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    body, html {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background-color: #1E1E2F;
+      font-family: Arial, sans-serif;
+      overflow-x: hidden;
+    }
+
+    #constellationCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background: linear-gradient(to bottom, #1E1E2F, #111121);
+    }
+
+    .container {
+      max-width: 600px;
+      margin-top: 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card {
+      background-color: rgba(255,255,255,0.15);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      padding: 30px 25px;
+      color: #fff;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+    }
+
+    h2 {
+      color: #fff;
+      margin-bottom: 20px;
+    }
+
+    .btn-dark {
+      background-color: #FFCA28;
+      color: #1E1E2F;
+      font-weight: bold;
+    }
+
+    .btn-dark:hover {
+      background-color: #ffc107cc;
+      color: #1E1E2F;
+    }
+
+    .btn-outline-primary {
+      color: #FFCA28;
+      border-color: #FFCA28;
+    }
+
+    .btn-outline-primary:hover {
+      background-color: #FFCA28;
+      color: #1E1E2F;
+    }
+
+    .alert-danger {
+      background-color: rgba(255,82,82,0.2);
+      border-color: rgba(255,82,82,0.3);
+      color: #fff;
+    }
+
+    footer {
+      background-color: #343A40;
+      color: #fff;
+      padding: 15px 0;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      margin-top: 50px;
+    }
   </style>
 </head>
 <body>
+  <!-- Constellation Background -->
+  <canvas id="constellationCanvas"></canvas>
+
   <!-- Navbar -->
-  <nav class="navbar navbar-dark bg-dark">
-    <div class="container">
-      <a href="/dashboard" class="navbar-brand">StudyShare</a>
-      <div>
-        <a href="/dashboard" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
-        <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
-      </div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="position: relative; z-index:1;">
+  <div class="container">
+    <a class="navbar-brand" href="/dashboard">StudyShare</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a href="/materials" class="btn btn-outline-light btn-sm me-2">All Materials</a>
+        </li>
+        <li class="nav-item">
+          <a href="/dashboard" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+        </li>
+      </ul>
     </div>
-  </nav>
+  </div>
+</nav>
+
 
   <div class="container">
     <div class="card p-4 mt-4">
       <h2 class="mb-3 text-center">
-        <%= editMode ? "✏️ Edit Material" : "📤 Upload New Material" %>
+        <%= editMode ? "Edit Material" : "Upload New Material" %>
       </h2>
 
       <% if (error) { %>
@@ -78,10 +174,81 @@
     </div>
   </div>
 
-  <footer class="bg-dark text-white py-3 mt-5 text-center">
+  <footer>
     &copy; <%= new Date().getFullYear() %> StudyShare
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Constellation background
+    const canvas = document.getElementById('constellationCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, particles;
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+
+    function createParticles() {
+      particles = [];
+      const total = 50;
+      for(let i=0;i<total;i++){
+        particles.push({
+          x: Math.random()*width,
+          y: Math.random()*height,
+          vx: (Math.random()-0.5)*0.3,
+          vy: (Math.random()-0.5)*0.3,
+          radius: Math.random()*2+1
+        });
+      }
+    }
+
+    function drawParticles(){
+      ctx.clearRect(0,0,width,height);
+      for(let p of particles){
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.radius,0,Math.PI*2);
+        ctx.fillStyle="#FFCA28";
+        ctx.fill();
+      }
+
+      for(let i=0;i<particles.length;i++){
+        for(let j=i+1;j<particles.length;j++){
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if(dist<120){
+            ctx.strokeStyle = "rgba(255,202,40," + (1-dist/120)*0.3 + ")";
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      updateParticles();
+      requestAnimationFrame(drawParticles);
+    }
+
+    function updateParticles(){
+      for(let p of particles){
+        p.x += p.vx;
+        p.y += p.vy;
+        if(p.x<0 || p.x>width) p.vx*=-1;
+        if(p.y<0 || p.y>height) p.vy*=-1;
+      }
+    }
+
+    window.addEventListener('resize', ()=>{
+      resizeCanvas();
+      createParticles();
+    });
+
+    resizeCanvas();
+    createParticles();
+    drawParticles();
+  </script>
 </body>
 </html>

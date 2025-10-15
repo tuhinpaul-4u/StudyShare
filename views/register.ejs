@@ -6,16 +6,77 @@
   <title>Register | StudyShare</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body {
-      background-color: #ADB5BD;
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #1E1E2F;
+      overflow-x: hidden;
+      font-family: Arial, sans-serif;
     }
+
+    /* Constellation background */
+    #constellationCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background: linear-gradient(to bottom, #1E1E2F, #111121);
+    }
+
+    /* Card styling */
     .card {
       max-width: 500px;
-      margin: 50px auto;
+      margin: 100px auto;
+      z-index: 1;
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    }
+
+    /* Frosted glass effect */
+    .card-col {
+      background-color: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    .btn-dark {
+      background-color: #343A40;
+      border: none;
+    }
+
+    .btn-dark:hover {
+      background-color: #212529;
+    }
+
+    .card-col a {
+      color: #FFEB3B;
+    }
+
+    .card-col a:hover {
+      color: #FFD700;
+    }
+
+    footer {
+      background-color: #343A40;
+      color: #fff;
+      padding: 15px 0;
+      text-align: center;
+      z-index: 1;
+      position: relative;
+      margin-top: 50px;
     }
   </style>
 </head>
 <body>
+  <!-- Constellation Background -->
+  <canvas id="constellationCanvas"></canvas>
+
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
@@ -31,16 +92,14 @@
     </div>
   </nav>
 
-  <!-- Registration Form Card -->
-  <div class="card shadow-sm p-4">
+  <!-- Registration Card -->
+  <div class="card shadow-sm p-4 card-col">
     <h2 class="mb-4 text-center">Create Account</h2>
 
-    <!-- Error Message -->
     <% if (error) { %>
       <div class="alert alert-danger text-center"><%= error %></div>
     <% } %>
 
-    <!-- Success Message (with HTML allowed for clickable links) -->
     <% if (message) { %>
       <div class="alert alert-success text-center"><%- message %></div>
     <% } %>
@@ -60,16 +119,109 @@
       </div>
       <button type="submit" class="btn btn-dark w-100">Register</button>
     </form>
+
     <p class="mt-3 text-center">Already have an account? <a href="/login">Login here</a></p>
   </div>
 
   <!-- Footer -->
-  <footer class="bg-dark text-white py-3 mt-5">
-    <div class="container text-center">
-      &copy; <%= new Date().getFullYear() %> StudyShare. All rights reserved.
-    </div>
+  <footer>
+    &copy; <%= new Date().getFullYear() %> StudyShare. All rights reserved.
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Constellation background with card attraction
+    const canvas = document.getElementById('constellationCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, particles;
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+
+    function createParticles() {
+      particles = [];
+      for (let i = 0; i < 70; i++) {
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: (Math.random() - 0.5) * 0.3,
+          radius: Math.random() * 2 + 1
+        });
+      }
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, width, height);
+
+      for (let p of particles) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
+        ctx.fillStyle = "#FFCA28";
+        ctx.fill();
+      }
+
+      // Connect lines
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i+1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if(dist < 120) {
+            ctx.strokeStyle = "rgba(255,202,40," + (1 - dist/120)*0.3 + ")";
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      updateParticles();
+      requestAnimationFrame(drawParticles);
+    }
+
+    function updateParticles() {
+      const card = document.querySelector('.card');
+      const rect = card.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      for (let p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > width) p.vx *= -1;
+        if (p.y < 0 || p.y > height) p.vy *= -1;
+
+        // Attraction toward card center
+        const dx = centerX - p.x;
+        const dy = centerY - p.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if(dist < 300) {
+          p.vx += dx/2500;
+          p.vy += dy/2500;
+
+          // subtle wrap effect around card edges
+          if(dist < 120) {
+            p.vx += (Math.random()-0.5)/10;
+            p.vy += (Math.random()-0.5)/10;
+          }
+        }
+      }
+    }
+
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+      createParticles();
+    });
+
+    resizeCanvas();
+    createParticles();
+    drawParticles();
+  </script>
 </body>
 </html>
